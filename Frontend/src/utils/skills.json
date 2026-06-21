@@ -1,0 +1,14 @@
+{
+  "technicalSkills": [
+    { "name": "React JS", "level": "Advanced", "category": "Frontend" },
+    { "name": "JavaScript", "level": "Advanced", "category": "Language" },
+    { "name": "TypeScript", "level": "Intermediate", "category": "Language" },
+    { "name": "HTML5", "level": "Expert", "category": "Frontend" },
+    { "name": "CSS3", "level": "Expert", "category": "Frontend" },
+    { "name": "Tailwind CSS", "level": "Advanced", "category": "Frontend" },
+    { "name": "PostgreSQL", "level": "Intermediate", "category": "Database" },
+    { "name": "MongoDB", "level": "Advanced", "category": "Database" },
+    { "name": "Postman", "level": "Advanced", "category": "Tools" },
+    { "name": "Node.js", "level": "Intermediate", "category": "Backend" }
+  ]
+}

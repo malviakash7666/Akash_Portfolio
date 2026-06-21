@@ -1,0 +1,28 @@
+{
+  "projects": [
+    {
+      "title": "HireHub - Full Stack Job Portal",
+      "description": "Built a full-stack job portal web application where recruiters can post and manage job listings, and job seekers can browse opportunities, apply online, and track applications. The platform includes role-based authentication, protected dashboards for recruiters and candidates, job filtering/search, application status management, and resume upload support.",
+      "techStack": ["React, TypeScript, Vite, Tailwind CSS, React Router, Axios, Framer Motion, Node.js, Express.js, Sequelize, PostgreSQL, JWT, bcrypt, Cloudinary, cookie-parser, CORS, ESLint, Nodemon."],
+      "liveLink": "https://job-frontend-flax.vercel.app",
+      "githubLink": "https://github.com/malviakash7666/Food_Dilevery/tree/main/src",
+      "category": "Full Stack"
+    },
+    {
+      "title": "Email Tracking Pixel API",
+      "description": "A backend service using Node.js to track email opens using transparent pixels and logging recipient data.",
+      "techStack": ["Node.js", "Express", "PostgreSQL", "Postman"],
+      "liveLink": "#",
+      "githubLink": "https://github.com/akash-mallvi/tracker",
+      "category": "Backend"
+    },
+    {
+      "title": "Modern Portfolio Template",
+      "description": "A highly responsive portfolio website with dynamic JSON-based data rendering and custom animations.",
+      "techStack": ["TypeScript", "React", "Tailwind CSS"],
+      "liveLink": "#",
+      "githubLink": "https://github.com/akash-mallvi/portfolio",
+      "category": "Frontend"
+    }
+  ]
+}

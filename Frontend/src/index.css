@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/* This tells Tailwind v4 to look for the .dark class */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Global smooth transition so the theme switch doesn't flicker */
+body {
+  @apply bg-white text-gray-900 transition-colors duration-300;
+}
+
+body.dark {
+  @apply bg-gray-900 text-white;
+}
