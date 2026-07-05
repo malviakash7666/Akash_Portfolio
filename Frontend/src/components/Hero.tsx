@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Hero: React.FC = () => {
-  const [visible, setVisible] = useState(false);
   const [simMode, setSimMode] = useState<'hit' | 'miss'>('hit');
   const [simStep, setSimStep] = useState<'idle' | 'client-to-api' | 'api-to-redis' | 'api-to-db' | 'redis-to-api' | 'db-to-api' | 'api-to-client' | 'done'>('idle');
   const [latency, setLatency] = useState<number | null>(null);
-
-  useEffect(() => {
-    setVisible(true);
-  }, []);
 
   const triggerSimulation = () => {
     if (simStep !== 'idle') return;

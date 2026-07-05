@@ -55,14 +55,7 @@ const Skills: React.FC = () => {
     return acc;
   }, {});
 
-  const handleDownloadCV = () => {
-    const link = document.createElement('a');
-    link.href = '/Akash.Malvi.pdf'; // Corrected file name
-    link.download = 'Akash_Malvi_CV.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+
 
   const categoriesOrder = ['Frontend', 'Backend', 'DevOps', 'Database'] as const;
 
