@@ -1,6 +1,5 @@
 
 import About from '../../components/About'
-import AICaseStudies from '../../components/AICaseStudies'
 import Contact from '../../components/Contact'
 import Experience from '../../components/Experience'
 import Hero from '../../components/Hero'
@@ -19,7 +18,6 @@ const Home = () => {
       <Projects />
       <Experience />
       <Contact />
-      <AICaseStudies />
     </div>
   )
 }

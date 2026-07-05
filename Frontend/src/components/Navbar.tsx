@@ -79,7 +79,7 @@ const Navbar: React.FC = () => {
             onClick={(e) => { e.preventDefault(); window.scrollTo({top: 0, behavior: 'smooth'}); }}
             className="group flex items-center gap-1 text-2xl font-black tracking-tighter"
           >
-            <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">DP</span>
+            <span className="text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">AM</span>
             <span className="text-gray-900 dark:text-white">PORTFOLIO</span>
           </a>
 
