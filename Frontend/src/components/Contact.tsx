@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { userService } from '../services/user.service';
 
 const Contact: React.FC = () => {
+  const [profile, setProfile] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const res = await userService.getPublicProfile();
+        if (res.success) {
+          setProfile(res.profile);
+        }
+      } catch (err) {
+        console.error("Error loading profile in Contact:", err);
+      }
+    };
+    fetchProfileData();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,142 +51,168 @@ const Contact: React.FC = () => {
     }
   };
 
+  const emailVal = "akashmalvi7666@gmail.com";
+  const phoneVal = "+91 87669 31232";
+  const locationVal = "Nagpur, Maharashtra";
+
+  const parsedSocials = (() => {
+    try {
+      if (profile?.socialLinks) {
+        return typeof profile.socialLinks === 'string' 
+          ? JSON.parse(profile.socialLinks) 
+          : profile.socialLinks;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return {
+      github: "https://github.com/malviakash7666",
+      linkedin: "https://www.linkedin.com/in/akash-malvi-50313b281",
+    };
+  })();
+
   return (
-    <section id="contact" className="py-28 bg-slate-50 dark:bg-[#030014] transition-colors duration-500 border-t border-slate-100 dark:border-slate-850">
-      <div className="max-w-7xl mx-auto px-6">
+    <section id="contact" className="relative py-28 bg-[#030014] overflow-hidden transition-colors duration-500">
+      
+      {/* Subtle background glow */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-[120px]" />
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-
-          {/* Left Side: Conversion-focused copy and links (5 columns) */}
-          <div className="lg:col-span-5 space-y-8">
+      <div className="max-w-6xl mx-auto px-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          
+          {/* Left Column: Let's Connect Details */}
+          <div className="space-y-8 text-left">
             <div>
-              <span className="inline-block px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider mb-3">
+              <div className="inline-flex items-center px-4.5 py-1.5 rounded-full bg-purple-950/45 border border-purple-800/30 text-purple-400 text-[10px] font-black uppercase tracking-widest mb-6">
                 Let's Partner
-              </span>
-              <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white leading-tight">
-                Let's <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500 font-black">Connect.</span>
-              </h2>
-              <p className="text-slate-500 dark:text-slate-400 text-base mt-4 leading-relaxed">
-                Looking for a Full-Stack Engineer (React + Node.js) who can optimize backend queries, design scalable sockets, and build robust interfaces? Reach out today—I typically respond in under 12 hours.
-              </p>
-            </div>
-
-            {/* Direct Contact Cards */}
-            <div className="space-y-4">
-              
-              {/* Email Card (Clickable) */}
-              <a 
-                href="mailto:malviakash7666@gmail.com"
-                className="flex items-center p-4 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl shadow-sm hover:border-purple-500/30 hover:shadow-md transition-all duration-300 group"
-              >
-                <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-100/50 dark:border-purple-900/40 p-3 rounded-xl text-purple-600 dark:text-purple-400 mr-4 shrink-0 group-hover:scale-105 transition-transform">
-                  📧
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Direct Email</p>
-                  <p className="text-slate-800 dark:text-slate-200 font-bold text-sm">malviakash7666@gmail.com</p>
-                </div>
-              </a>
-
-              {/* Location Card */}
-              <div className="flex items-center p-4 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl shadow-sm hover:border-purple-500/30 hover:shadow-md transition-all duration-300 group">
-                <div className="bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100/50 dark:border-indigo-900/40 p-3 rounded-xl text-indigo-600 dark:text-indigo-400 mr-4 shrink-0">
-                  📍
-                </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Current Location</p>
-                  <p className="text-slate-800 dark:text-slate-200 font-bold text-sm">Nagpur, India (Open to Remote / Relocation)</p>
-                </div>
               </div>
-
+              <h2 className="text-4xl sm:text-5xl font-black text-white leading-tight">
+                Let's <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">Connect.</span>
+              </h2>
             </div>
 
-            {/* Social Buttons */}
-            <div className="flex gap-4">
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-lg">
+              Looking for a Full-Stack Engineer (React + Node.js) who can optimize backend queries, design scalable sockets, and build robust interfaces? Reach out today—I typically respond in under 12 hours.
+            </p>
+
+            {/* Direct Email Card */}
+            <div className="p-5 bg-slate-900/40 border border-slate-900 rounded-2xl flex items-center gap-4 hover:shadow-md hover:border-[#6366f1]/20 transition-all duration-300">
+              <div className="w-12 h-12 rounded-xl bg-purple-950/50 text-[#818cf8] flex items-center justify-center text-xl shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L22 8m-2 11H4a2 2 0 01-2-2V7a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Direct Email</span>
+                <a href={`mailto:${profile?.email || 'malviakash7666@gmail.com'}`} className="text-white hover:text-[#818cf8] transition-colors font-bold text-sm sm:text-base break-all">
+                  {profile?.email || 'malviakash7666@gmail.com'}
+                </a>
+              </div>
+            </div>
+
+            {/* Current Location Card */}
+            <div className="p-5 bg-slate-900/40 border border-slate-900 rounded-2xl flex items-center gap-4 hover:shadow-md hover:border-[#6366f1]/20 transition-all duration-300">
+              <div className="w-12 h-12 rounded-xl bg-purple-950/50 text-[#818cf8] flex items-center justify-center text-xl shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Current Location</span>
+                <span className="text-white font-bold text-sm sm:text-base">
+                  Nagpur, India (Open to Remote / Relocation)
+                </span>
+              </div>
+            </div>
+
+            {/* Profile buttons */}
+            <div className="flex gap-4 pt-4">
               <a
-                href="https://github.com/malviakash7666"
+                href={parsedSocials.github}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="flex-1 py-3.5 border border-slate-900 hover:border-slate-800 bg-[#090b16]/65 hover:bg-slate-900 text-white rounded-2xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.167 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
                 </svg>
                 GitHub Profile
               </a>
               <a
-                href="https://www.linkedin.com/in/akash-malvi-50313b281"
+                href={parsedSocials.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 py-3 px-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                className="flex-1 py-3.5 border border-slate-900 hover:border-slate-800 bg-[#090b16]/65 hover:bg-slate-900 text-white rounded-2xl text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2"
               >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                 </svg>
                 LinkedIn Profile
               </a>
             </div>
           </div>
 
-          {/* Right Side: Contact Form (7 columns) */}
-          <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 p-8 rounded-[2.5rem] shadow-2xl glow-purple hover:border-purple-500/25 transition-all duration-300">
+          {/* Right Column: Form */}
+          <div className="bg-[#090b16]/40 border border-slate-900 p-8 sm:p-10 rounded-3xl shadow-xl backdrop-blur-md text-left">
             <form onSubmit={handleSubmit} className="space-y-6">
-              
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Name</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest text-left">Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your Name"
-                  className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
+                  className="w-full px-5 py-3.5 text-sm rounded-xl bg-[#030014]/60 border border-slate-800 text-white placeholder-slate-600 focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] outline-none transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Email</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest text-left">Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
-                  className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all"
+                  className="w-full px-5 py-3.5 text-sm rounded-xl bg-[#030014]/60 border border-slate-800 text-white placeholder-slate-600 focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] outline-none transition-all"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Message</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest text-left">Message</label>
                 <textarea
                   rows={4}
                   required
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Describe your project, job opportunity, or collaboration idea..."
-                  className="w-full px-4 py-3 text-sm rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all resize-none"
+                  className="w-full px-5 py-3.5 text-sm rounded-xl bg-[#030014]/60 border border-slate-800 text-white placeholder-slate-600 focus:border-[#6366f1] focus:ring-1 focus:ring-[#6366f1] outline-none transition-all resize-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full py-4 rounded-xl font-extrabold text-xs uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
+                className={`w-full py-4 rounded-2xl font-bold text-xs uppercase tracking-wider text-white transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   isSubmitting
-                    ? 'bg-slate-300 dark:bg-slate-800 text-slate-500 cursor-not-allowed'
-                    : 'bg-purple-600 hover:bg-purple-700 hover:shadow-purple-500/20 active:scale-98'
+                    ? 'bg-slate-850 text-slate-500 cursor-not-allowed border border-slate-800'
+                    : 'bg-[#9333ea] hover:bg-[#a855f7] active:scale-98 shadow-lg shadow-purple-900/10'
                 }`}
               >
                 {isSubmitting ? (
                   <>
-                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Dispatching request...
+                    Sending...
                   </>
                 ) : (
-                  'Send Message 🚀'
+                  <span>Send Message 🚀</span>
                 )}
               </button>
             </form>

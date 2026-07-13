@@ -1,6 +1,6 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@import "tailwindcss";
 
 /* This tells Tailwind v4 to look for the .dark class */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -43,7 +43,7 @@ body.dark {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-800 rounded-full hover:bg-indigo-500 transition-colors;
+  @apply bg-pink-500 dark:bg-pink-600 rounded-full hover:bg-pink-600 dark:hover:bg-pink-500 transition-colors;
 }
 
 /* Float Animations */

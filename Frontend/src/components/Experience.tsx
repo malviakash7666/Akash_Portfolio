@@ -1,5 +1,5 @@
-
-import experienceData from "../utils/experience.json";
+import React, { useState, useEffect } from 'react';
+import { userService } from '../services/user.service';
 
 interface ExperienceItem {
   role: string;
@@ -11,59 +11,106 @@ interface ExperienceItem {
 }
 
 const Experience: React.FC = () => {
-  const { experiences } = experienceData;
+  const [experiences, setExperiences] = useState<ExperienceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        const res = await userService.getExperiences();
+        if (res.success) {
+          setExperiences(res.experiences);
+        }
+      } catch (err) {
+        console.error("Error loading experiences:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExperiences();
+  }, []);
 
   return (
-    <section id="experience" className="py-20 bg-gray-50 dark:bg-gray-900 transition-colors duration-500">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="experience" className="py-24 bg-white dark:bg-[#030014] transition-colors duration-500 overflow-hidden">
+      <div className="max-w-6xl mx-auto px-6">
 
-        <div className="text-center mb-16">
-          <span className="inline-block text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-widest uppercase mb-3">My Journey</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Work <span className="text-indigo-600 dark:text-indigo-400">Experience</span>
+        {/* Section Title */}
+        <div className="space-y-3 mb-16 text-left">
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white">
+            Experience
           </h2>
-          <p className="text-gray-500 dark:text-gray-400">My professional journey and academic background.</p>
+          {/* Purple underline */}
+          <div className="w-12 h-1 bg-[#6366f1] rounded-full" />
         </div>
 
-        <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-purple-200 dark:before:via-purple-800 before:to-transparent">
+        {/* Timeline Grid */}
+        <div className="relative pl-8 md:pl-0">
+          {/* Mobile vertical line helper */}
+          <div className="absolute left-[7px] top-6 bottom-6 w-[1px] bg-slate-200 dark:bg-slate-800 md:hidden" />
 
           {experiences.map((exp: ExperienceItem, index: number) => (
-            <div key={index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-
-              {/* Timeline Dot */}
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-white dark:border-gray-900 bg-gray-100 dark:bg-gray-800 group-hover:bg-purple-600 dark:group-hover:bg-purple-600 group-hover:text-white text-gray-400 dark:text-gray-500 shadow-md shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 transition-all duration-300 z-10">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57c0 .542-.312 1.034-.792 1.28l-5.416 2.78a.75.75 0 01-.684 0l-5.416-2.78A1.427 1.427 0 014 11.57V8a2 2 0 012-2h2zm2 0h4v-1a1 1 0 00-1-1H9a1 1 0 00-1 1v1z" clipRule="evenodd" />
-                </svg>
+            <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 relative mb-2 last:mb-0">
+              
+              {/* Date column (left) */}
+              <div className="md:col-span-3 md:text-right pt-6 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                {exp.period}
               </div>
 
-              {/* Content Card */}
-              <div className="w-[calc(100%-4rem)] md:w-[45%] p-6 rounded-2xl border border-slate-150 dark:border-slate-800 bg-white dark:bg-slate-900/60 shadow-sm hover:border-purple-500/30 hover:shadow-lg dark:hover:shadow-purple-500/5 transition-all duration-300">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="font-bold text-gray-900 dark:text-white">{exp.role}</div>
-                  {exp.current && (
-                    <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide border border-green-200 dark:border-green-800">
-                      Current
+              {/* Timeline indicator column */}
+              <div className="hidden md:flex md:col-span-1 justify-center relative">
+                {/* Dot */}
+                <div className="w-3.5 h-3.5 rounded-full bg-[#6366f1] border-2 border-white dark:border-[#030014] mt-6.5 z-10" />
+                {/* Line */}
+                {index < experiences.length - 1 && (
+                  <div className="absolute top-8 bottom-0 w-[1px] bg-slate-200 dark:bg-slate-800" />
+                )}
+              </div>
+
+              {/* Card Column (right) */}
+              <div className="md:col-span-8 pb-10">
+                <div className="bg-white dark:bg-slate-900/60 border border-slate-150 dark:border-slate-850 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 relative">
+                  {/* Mobile Dot */}
+                  <div className="md:hidden absolute -left-[32px] top-[26px] w-3.5 h-3.5 rounded-full bg-[#6366f1] border-2 border-white dark:border-[#030014] z-10" />
+                  
+                  {/* Card Header (Role + Badge) */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                      {exp.role}
+                    </h3>
+                    <span className="bg-[#f5f3ff] dark:bg-purple-950/40 border border-[#ddd6fe] dark:border-purple-900/40 text-[#6366f1] dark:text-[#818cf8] text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      {exp.current ? "Present" : "Internship"}
                     </span>
-                  )}
-                </div>
-                <div className="text-indigo-600 dark:text-indigo-400 font-semibold text-sm mb-2">{exp.company}</div>
-                <time className="font-mono text-xs text-gray-400 dark:text-gray-500 block mb-4">
-                  {exp.period} · {exp.location}
-                </time>
+                  </div>
 
-                <ul className="text-gray-600 dark:text-gray-400 text-sm space-y-2 list-none">
-                  {exp.description.map((point, i) => (
-                    <li key={i} className="flex items-start gap-2">
-                      <span className="mt-1.5 w-1.5 h-1.5 bg-indigo-400 dark:bg-indigo-500 rounded-full shrink-0" />
-                      {point}
-                    </li>
-                  ))}
-                </ul>
+                  {/* Company Name */}
+                  <div className="mb-4">
+                    <a 
+                      href="https://shikshasaarathi.in"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#6366f1] dark:text-[#818cf8] font-bold text-sm hover:underline"
+                    >
+                      {exp.company}
+                    </a>
+                  </div>
+
+                  {/* Bullet description points */}
+                  <ul className="space-y-2.5 text-left text-slate-650 dark:text-slate-400 text-xs sm:text-sm font-medium">
+                    {exp.description.map((point, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-[#6366f1] dark:text-[#818cf8] mt-1.5">•</span>
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                </div>
               </div>
+
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );

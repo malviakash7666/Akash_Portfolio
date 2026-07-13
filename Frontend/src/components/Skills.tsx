@@ -1,5 +1,5 @@
-import React from 'react';
-import skillsData from "../utils/skills.json";
+import React, { useState, useEffect } from 'react';
+import { userService } from '../services/user.service';
 
 interface Skill {
   name: string;
@@ -7,147 +7,133 @@ interface Skill {
   category: string;
 }
 
-const tierMeta = {
-  Frontend: {
-    title: 'Frontend Client',
-    description: 'Interface & User Experience',
-    icon: '💻',
-    bgClass: 'bg-blue-500/5 border-blue-500/20 text-blue-500',
-    dotClass: 'bg-blue-500',
-  },
-  Backend: {
-    title: 'API & Backend Server',
-    description: 'Business Logic & Routing',
-    icon: '⚙️',
-    bgClass: 'bg-green-500/5 border-green-500/20 text-green-500',
-    dotClass: 'bg-green-500',
-  },
-  DevOps: {
-    title: 'Caching & Infrastructure',
-    description: 'Performance & Containers',
-    icon: '⚡',
-    bgClass: 'bg-yellow-500/5 border-yellow-500/20 text-yellow-500',
-    dotClass: 'bg-yellow-500',
-  },
-  Database: {
-    title: 'Storage & Database',
-    description: 'Persistent Data Modeling',
-    icon: '🗄️',
-    bgClass: 'bg-purple-500/5 border-purple-500/20 text-purple-500',
-    dotClass: 'bg-purple-500',
-  }
-};
-
 const Skills: React.FC = () => {
-  const { technicalSkills } = skillsData;
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Group skills by category
-  const skillsByGroup = technicalSkills.reduce((acc: Record<string, Skill[]>, skill: Skill) => {
-    // Standardize category matching for our 4 tiers
+  useEffect(() => {
+    const fetchSkills = async () => {
+      try {
+        const res = await userService.getSkills();
+        if (res.success) {
+          setSkills(res.skills);
+        }
+      } catch (err) {
+        console.error("Error loading skills:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSkills();
+  }, []);
+
+  // Group skills by category, mapping DevOps/Tools to 'Tools & Others'
+  const skillsByGroup = skills.reduce((acc: Record<string, Skill[]>, skill: Skill) => {
     let cat = skill.category;
-    if (cat === 'Language') {
-      // Map general languages to Frontend or Backend to maintain 4 tiers
+    if (cat === 'DevOps' || cat === 'Tools' || cat === 'Tools & Others') {
+      cat = 'Tools & Others';
+    } else if (cat === 'Language') {
       if (skill.name === 'TypeScript' || skill.name === 'JavaScript') cat = 'Frontend';
       else cat = 'Backend';
     }
-    if (!acc[cat]) acc[cat] = [];
+    if (!acc[cat]) acc[acc[cat] ? cat : cat] = [];
     acc[cat].push(skill);
     return acc;
   }, {});
 
+  const categoriesOrder = ['Frontend', 'Backend', 'Database', 'Tools & Others'] as const;
 
-
-  const categoriesOrder = ['Frontend', 'Backend', 'DevOps', 'Database'] as const;
+  const categoryMeta = {
+    Frontend: {
+      title: 'Frontend',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      )
+    },
+    Backend: {
+      title: 'Backend',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+      )
+    },
+    Database: {
+      title: 'Database',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+        </svg>
+      )
+    },
+    'Tools & Others': {
+      title: 'Tools & Others',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    }
+  };
 
   return (
-    <section id="skills" className="py-28 bg-slate-50 dark:bg-[#030014] transition-colors duration-500 overflow-hidden">
+    <section id="skills" className="py-24 bg-[#fafafa] dark:bg-[#030014] transition-colors duration-500 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* Section Header */}
-        <div className="max-w-3xl mb-16 text-left">
-          <span className="inline-block px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider mb-4">
-            System Capabilities
-          </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">
-            Engineering <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500 font-black">Skill Map.</span>
+        {/* Section Title */}
+        <div className="space-y-3 mb-16 text-left">
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white">
+            Skills
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-lg">
-            This structured map illustrates how I utilize my stack across different architectural tiers of a web application to ensure speed, scalability, and security.
-          </p>
+          {/* Purple underline */}
+          <div className="w-12 h-1 bg-[#6366f1] rounded-full" />
         </div>
 
-        {/* The Skill Map Grid representing System Tiers */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
-          
-          {/* Connecting system flow lines (hidden on mobile) */}
-          <div className="hidden lg:block absolute top-[40px] left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/20 via-green-500/20 via-yellow-500/20 to-purple-500/20 z-0 pointer-events-none" />
-
+        {/* 4-Column Category Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {categoriesOrder.map((catKey) => {
-            const meta = tierMeta[catKey];
+            const meta = categoryMeta[catKey];
             const groupSkills = skillsByGroup[catKey] || [];
 
             return (
               <div 
                 key={catKey}
-                className="relative bg-white dark:bg-slate-900/60 border border-slate-150 dark:border-slate-800 p-6 rounded-[2rem] shadow-xl glow-purple hover:border-purple-500/25 transition-all duration-300 z-10 flex flex-col justify-between"
+                className="bg-white dark:bg-slate-900/60 border border-slate-150 dark:border-slate-850 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
               >
-                <div>
-                  {/* Tier Header */}
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold border ${meta.bgClass}`}>
-                      {meta.icon}
-                    </div>
-                    <div>
-                      <h3 className="text-base font-extrabold text-slate-900 dark:text-white leading-none">
-                        {meta.title}
-                      </h3>
-                      <span className="text-[10px] text-slate-450 dark:text-slate-500 font-medium">
-                        {meta.description}
-                      </span>
-                    </div>
+                {/* Category Header Card */}
+                <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 bg-slate-50/50 dark:bg-slate-950/20">
+                  <div className="w-10 h-10 rounded-xl bg-[#eef2ff] dark:bg-purple-950/40 text-[#6366f1] dark:text-[#818cf8] flex items-center justify-center">
+                    {meta.icon}
                   </div>
-
-                  {/* Skills in Tier */}
-                  <div className="space-y-4">
-                    {groupSkills.map((skill, index) => (
-                      <div 
-                        key={index}
-                        className="p-3 bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-850 rounded-2xl group transition-all duration-300"
-                      >
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                            {skill.name}
-                          </span>
-                          <span className="text-[9px] uppercase font-extrabold tracking-wider text-purple-600 dark:text-purple-400">
-                            {skill.level}
-                          </span>
-                        </div>
-                        {/* Custom visual progress bar */}
-                        <div className="w-full bg-slate-100 dark:bg-slate-850 h-1 rounded-full overflow-hidden">
-                          <div 
-                            className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-1000 ease-out"
-                            style={{ 
-                              width: skill.level === 'Advanced' || skill.level === 'Expert' ? '90%' : skill.level === 'Intermediate' ? '65%' : '45%' 
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                    {meta.title}
+                  </h3>
                 </div>
 
-                {/* Tier visual connection dot at the bottom */}
-                <div className="mt-8 pt-4 border-t border-slate-100 dark:border-slate-850 flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Architectural Node</span>
-                  <span className={`w-2.5 h-2.5 rounded-full ${meta.dotClass} animate-pulse`} />
+                {/* Bulleted List of Skills */}
+                <div className="p-6 flex-grow">
+                  <ul className="space-y-3 text-left">
+                    {groupSkills.map((skill, index) => (
+                      <li 
+                        key={index}
+                        className="flex items-center gap-2 text-slate-650 dark:text-slate-400 text-sm font-medium"
+                      >
+                        <span className="text-[#6366f1] dark:text-[#818cf8] text-base">•</span>
+                        <span>{skill.name}</span>
+                      </li>
+                    ))}
+                    {groupSkills.length === 0 && (
+                      <li className="text-slate-400 text-xs italic">No skills listed</li>
+                    )}
+                  </ul>
                 </div>
               </div>
             );
           })}
-
         </div>
-
-
 
       </div>
     </section>

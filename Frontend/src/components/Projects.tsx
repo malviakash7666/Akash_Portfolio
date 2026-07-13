@@ -1,125 +1,160 @@
-import React from 'react';
-import projectsData from '../utils/projects.json';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { userService } from '../services/user.service';
 
 interface Project {
+  id: number;
   title: string;
   problem: string;
   implementation: string;
   impact: string;
-  techStack: string[];
+  techStack: string | string[];
   liveLink: string;
   githubLink: string;
   category: string;
+  image: string | null;
 }
 
 const Projects: React.FC = () => {
-  const { projects } = projectsData;
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await userService.getProjects({ homepage: true });
+        if (res.success) {
+          setProjects(res.projects);
+        }
+      } catch (err) {
+        console.error("Error loading projects:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  const getProjectPlaceholder = (title: string) => {
+    const gradients = [
+      "from-indigo-500 to-purple-500",
+      "from-blue-500 to-indigo-600",
+      "from-purple-600 to-pink-500",
+      "from-emerald-400 to-teal-600"
+    ];
+    // Hash title to pick a consistent gradient
+    const index = Math.abs(title.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % gradients.length;
+    
+    return (
+      <div className={`w-full h-48 bg-gradient-to-tr ${gradients[index]} flex flex-col items-center justify-center text-white p-6 relative overflow-hidden select-none`}>
+        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-xl -mr-6 -mt-6" />
+        <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
+        <span className="text-3xl font-black tracking-widest uppercase mb-1">
+          {title.split(" ").slice(0, 2).map(w => w[0]).join("")}
+        </span>
+        <span className="text-[10px] font-mono opacity-80 uppercase tracking-widest">Workspace Demo</span>
+      </div>
+    );
+  };
 
   return (
-    <section id="projects" className="py-28 bg-white dark:bg-[#030014] transition-colors duration-500">
+    <section id="projects" className="py-24 bg-[#fafafa] dark:bg-[#030014] transition-colors duration-500 overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Section Header */}
-        <div className="text-center mb-20">
-          <span className="inline-block px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider mb-3">Proven Solutions</span>
-          <h2 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4">
-            Production-Ready <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500 font-black">Projects.</span>
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">
-            Real-world systems engineered for low latency, request integrity, and high throughput.
-          </p>
+        <div className="flex justify-between items-end mb-16">
+          <div className="space-y-3 text-left">
+            <h2 className="text-3xl font-black text-slate-900 dark:text-white">
+              Projects
+            </h2>
+            {/* Purple underline */}
+            <div className="w-12 h-1 bg-[#6366f1] rounded-full" />
+          </div>
+
+          <Link 
+            to="/projects"
+            className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-semibold rounded-xl text-xs hover:border-[#6366f1] hover:text-[#6366f1] transition-all cursor-pointer bg-white dark:bg-slate-900"
+          >
+            View All Projects
+          </Link>
         </div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project: Project, index: number) => {
+            // Parse techStack if it's stored as a JSON string
+            const tech: string[] = (() => {
+              try {
+                if (typeof project.techStack === 'string') {
+                  return JSON.parse(project.techStack);
+                }
+                return project.techStack || [];
+              } catch (e) {
+                console.error(e);
+              }
+              return [];
+            })();
+
             return (
               <div
-                key={index}
-                className="group relative bg-white dark:bg-slate-900/60 rounded-[2.5rem] overflow-hidden border border-slate-150 dark:border-slate-800 hover:border-purple-500/30 shadow-xl hover:shadow-[0_0_30px_rgba(168,85,247,0.15)] transition-all duration-500 flex flex-col justify-between"
+                key={project.id || index}
+                onClick={() => navigate(`/projects/${project.id}`)}
+                className="group bg-white dark:bg-slate-900/60 rounded-2xl overflow-hidden border border-slate-150 dark:border-slate-850 hover:border-[#6366f1]/35 hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer"
               >
                 <div>
-                  {/* Card Header (Category & Title) */}
-                  <div className="p-6 pb-2">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="bg-purple-50 dark:bg-purple-950/50 border border-purple-100/50 dark:border-purple-900/40 text-purple-600 dark:text-purple-450 text-[10px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
-                        {project.category}
-                      </span>
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white leading-tight group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                      {project.title}
-                    </h3>
+                  {/* Project Image */}
+                  <div className="relative overflow-hidden border-b border-slate-100 dark:border-slate-800">
+                    {project.image ? (
+                      <img 
+                        src={project.image} 
+                        alt={project.title} 
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      getProjectPlaceholder(project.title)
+                    )}
                   </div>
 
                   {/* Card Body */}
-                  <div className="p-6 pt-3 space-y-4">
+                  <div className="p-6 space-y-4 text-left">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-[#6366f1] transition-colors leading-tight">
+                      {project.title}
+                    </h3>
                     
-                    {/* The Problem Statement */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-500 uppercase tracking-wide">
-                        <span>⚠️</span> The Problem
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pl-5 font-medium">
-                        {project.problem}
-                      </p>
-                    </div>
+                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                      {project.problem || "Developed a dynamic web portal optimized for usability, scalability, and robust user state interactions."}
+                    </p>
 
-                    {/* Technical Solution */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wide">
-                        <span>🛠️</span> Solution / Implementation
-                      </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-5">
-                        {project.implementation}
-                      </p>
+                    {/* Tech Stack Badges */}
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {tech.map((t, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] font-semibold bg-slate-100 dark:bg-slate-850 text-slate-500 dark:text-slate-400 px-2.5 py-0.5 rounded-full"
+                        >
+                          {t}
+                        </span>
+                      ))}
                     </div>
-
-                    {/* Engineering Impact */}
-                    <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500 uppercase tracking-wide">
-                        <span>📈</span> Engineering Impact
-                      </div>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold pl-5 leading-relaxed">
-                        {project.impact}
-                      </p>
-                    </div>
-
-                    {/* Tech Badges */}
-                    <div className="pt-2">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Tech Stack</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.techStack.map((tech, i) => (
-                          <span
-                            key={i}
-                            className="text-[9px] font-extrabold bg-slate-100 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 border border-slate-200/50 dark:border-slate-800/80 px-2.5 py-0.5 rounded-md"
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
                   </div>
                 </div>
 
                 {/* Card Footer Links */}
-                <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between mt-auto bg-slate-50/50 dark:bg-slate-950/20">
+                <div className="p-6 pt-0 flex items-center gap-4 bg-transparent mt-auto" onClick={(e) => e.stopPropagation()}>
                   <a
                     href={project.githubLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider transition-colors"
+                    className="text-xs font-bold text-slate-500 hover:text-[#6366f1] transition-colors flex items-center gap-1 uppercase tracking-wider"
                   >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-                    </svg>
-                    Source Code
+                    Code
                   </a>
                   <a
                     href={project.liveLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="bg-slate-900 dark:bg-purple-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-purple-700 dark:hover:bg-purple-550 transition-colors shadow-md"
+                    className="text-xs font-bold text-[#6366f1] hover:text-[#4f46e5] transition-colors flex items-center gap-1 uppercase tracking-wider"
                   >
                     Live Demo ↗
                   </a>
@@ -128,6 +163,17 @@ const Projects: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Scroll indicator slider buttons in the bottom right */}
+        <div className="flex justify-end gap-2.5 mt-8">
+          <button className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:border-[#6366f1] hover:text-[#6366f1] bg-white dark:bg-slate-900 transition-colors select-none cursor-pointer">
+            ‹
+          </button>
+          <button className="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:border-[#6366f1] hover:text-[#6366f1] bg-white dark:bg-slate-900 transition-colors select-none cursor-pointer">
+            ›
+          </button>
+        </div>
+
       </div>
     </section>
   );

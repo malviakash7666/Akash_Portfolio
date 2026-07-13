@@ -1,353 +1,315 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { userService } from '../services/user.service';
 
 const Hero: React.FC = () => {
-  const [simMode, setSimMode] = useState<'hit' | 'miss'>('hit');
-  const [simStep, setSimStep] = useState<'idle' | 'client-to-api' | 'api-to-redis' | 'api-to-db' | 'redis-to-api' | 'db-to-api' | 'api-to-client' | 'done'>('idle');
-  const [latency, setLatency] = useState<number | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [projectsCount, setProjectsCount] = useState<number>(3);
+  const [experienceYears, setExperienceYears] = useState<number>(2);
+  const [skillsList, setSkillsList] = useState<string[]>(["React", "Node.js", "PostgreSQL"]);
 
-  const triggerSimulation = () => {
-    if (simStep !== 'idle') return;
-    
-    setLatency(null);
-    setSimStep('client-to-api');
+  useEffect(() => {
+    const loadHeroData = async () => {
+      try {
+        const [profileRes, projectsRes, experiencesRes, skillsRes] = await Promise.all([
+          userService.getPublicProfile(),
+          userService.getProjects(),
+          userService.getExperiences(),
+          userService.getSkills(),
+        ]);
 
-    // Steps timing
-    setTimeout(() => {
-      setSimStep('api-to-redis');
-      
-      setTimeout(() => {
-        if (simMode === 'hit') {
-          setSimStep('redis-to-api');
-          setTimeout(() => {
-            setSimStep('api-to-client');
-            setTimeout(() => {
-              setSimStep('done');
-              setLatency(2); // 2ms Redis hit
-              setTimeout(() => setSimStep('idle'), 3000);
-            }, 500);
-          }, 400);
-        } else {
-          // Miss flow
-          setTimeout(() => {
-            setSimStep('api-to-db');
-            setTimeout(() => {
-              setSimStep('db-to-api');
-              setTimeout(() => {
-                setSimStep('api-to-client');
-                setTimeout(() => {
-                  setSimStep('done');
-                  setLatency(48); // 48ms DB query
-                  setTimeout(() => setSimStep('idle'), 3000);
-                }, 500);
-              }, 600);
-            }, 600);
-          }, 400);
+        if (profileRes && profileRes.success) {
+          setProfile(profileRes.profile);
         }
-      }, 500);
-    }, 500);
-  };
+        
+        if (projectsRes && projectsRes.success) {
+          setProjectsCount(projectsRes.projects?.length || 3);
+        }
+
+        if (experiencesRes && experiencesRes.success) {
+          const experiences = experiencesRes.experiences || [];
+          if (experiences.length > 0) {
+            let oldestYear = new Date().getFullYear();
+            experiences.forEach((exp: any) => {
+              const years = exp.period.match(/\b(20\d{2})\b/g);
+              if (years) {
+                years.forEach((yrStr: string) => {
+                  const yr = parseInt(yrStr, 10);
+                  if (yr < oldestYear) {
+                    oldestYear = yr;
+                  }
+                });
+              }
+            });
+            const currentYear = new Date().getFullYear();
+            const calculatedYears = currentYear - oldestYear;
+            setExperienceYears(calculatedYears > 0 ? calculatedYears : 2);
+          }
+        }
+
+        if (skillsRes && skillsRes.success) {
+          const skills = skillsRes.skills || [];
+          const topSkills = skills.slice(0, 3).map((s: any) => s.name);
+          if (topSkills.length > 0) {
+            setSkillsList(topSkills);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading dynamic data in Hero:", err);
+      }
+    };
+    loadHeroData();
+  }, []);
 
   const handleDownloadResume = () => {
     const link = document.createElement('a');
-    link.href = '/Akash.Malvi.pdf'; // Correct filepath from public directory
+    link.href = profile?.resumeUrl || '/Akash.Malvi.pdf';
     link.download = 'Akash_Malvi_FullStack_Resume.pdf';
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  const parsedSocials = (() => {
+    try {
+      if (profile?.socialLinks) {
+        return typeof profile.socialLinks === 'string' 
+          ? JSON.parse(profile.socialLinks) 
+          : profile.socialLinks;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return {
+      github: "https://github.com/malviakash7666",
+      linkedin: "https://www.linkedin.com/in/akash-malvi-50313b281",
+      leetcode: "https://leetcode.com/u/akashmalvi7666/",
+    };
+  })();
+
+  const defaultHeadline = "Hi, I'm Akash Malvi";
+  const defaultTagline = "I build scalable web applications that solve real-world problems.";
+  const defaultSubtext = "I'm a Full Stack Developer with expertise in React.js, Node.js, TypeScript and PostgreSQL. I love building clean, performant and user-friendly applications.";
+
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#030014] overflow-hidden pt-24 pb-16 transition-colors duration-500">
+    <section className="relative w-full min-h-screen flex items-center justify-center bg-white dark:bg-[#030014] overflow-hidden pt-28 pb-16 transition-colors duration-500">
       
       {/* Background radial glow */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)]" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 dark:bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 dark:bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_80%,transparent_100%)]" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/5 dark:bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none" />
       </div>
 
-      <div className="container mx-auto px-6 relative z-10 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      <div className="container mx-auto px-6 relative z-10 w-full max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
           
           {/* Copywriting Area (7 columns) */}
           <div className="lg:col-span-7 text-left space-y-6">
             
-            {/* Status Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/50 text-purple-600 dark:text-purple-400 text-xs font-bold uppercase tracking-wider">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            {/* Status / Role Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#f5f3ff] dark:bg-purple-950/40 border border-[#ddd6fe] dark:border-purple-900/40 text-[#6366f1] dark:text-[#818cf8] text-xs font-bold font-sans tracking-wide">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22c55e]"></span>
               </span>
-              Actively Interviewing
+              Full Stack Developer
             </div>
 
-            {/* Role Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 dark:text-white leading-[1.15] tracking-tight">
-              Full Stack Developer <br className="hidden md:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 font-black">
-                (React + Node.js)
-              </span>
-              <div className="text-2xl sm:text-3xl font-bold text-slate-500 dark:text-slate-400 mt-2 font-mono">
-                Scalable Systems & Backend Enthusiast
-              </div>
+            {/* Headline */}
+            <h1 className="text-5xl sm:text-6xl font-black text-[#0f172a] dark:text-white leading-[1.1] tracking-tight">
+              Hi, I'm <span className="text-[#6366f1]">{profile?.name || "Akash Malvi"}</span>
             </h1>
 
+            {/* Tagline */}
+            <div className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 leading-snug">
+              {defaultTagline}
+            </div>
+
             {/* Subtext */}
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-              I build scalable web applications using <span className="font-semibold text-slate-900 dark:text-white">Redis</span>, <span className="font-semibold text-slate-900 dark:text-white">Docker</span>, and <span className="font-semibold text-slate-900 dark:text-white">real-time architectures</span>. Focused on resolving bottlenecks, database concurrency, and writing clean, testable code.
+            <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed font-normal">
+              {profile?.bio || defaultSubtext}
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-4 pt-2">
               <a
                 href="#projects"
-                className="w-full sm:w-auto px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl text-center transition-all shadow-xl shadow-purple-500/20 active:scale-95 duration-200"
+                className="px-6 py-3.5 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold rounded-xl text-center flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-indigo-500/10 active:scale-95 duration-200 text-sm"
               >
-                View Projects
-              </a>
-              <button
-                onClick={handleDownloadResume}
-                className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-purple-500 dark:hover:border-purple-500 hover:text-purple-600 dark:hover:text-purple-400 transition-all flex items-center justify-center gap-2 active:scale-95 duration-200"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                View My Work
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-                Download Resume
-              </button>
+              </a>
+              <a
+                href="#contact"
+                className="px-6 py-3.5 bg-white dark:bg-transparent text-slate-800 dark:text-slate-200 font-bold rounded-xl border border-slate-350 dark:border-slate-800 hover:border-slate-800 dark:hover:border-white hover:bg-slate-50 transition-all flex items-center justify-center gap-2 active:scale-95 duration-200 text-sm"
+              >
+                Contact Me
+                <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L22 8m-9 11h-3a2 2 0 01-2-2V7a2 2 0 012-2h3M9 19a2 2 0 002 2h3a2 2 0 002-2m-8-2h8" />
+                </svg>
+              </a>
             </div>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-3 gap-6 max-w-lg border-t border-slate-200 dark:border-slate-800/80 pt-6">
+            {/* Social Links Row */}
+            <div className="flex items-center gap-3 pt-3">
+              {/* GitHub */}
+              <a
+                href={parsedSocials.github || "https://github.com/malviakash7666"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-11 h-11 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-[#6366f1] dark:hover:text-[#818cf8] hover:border-[#6366f1] dark:hover:border-[#818cf8] hover:bg-indigo-50/20 transition-all cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.167 6.839 9.49.5.09.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.164 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+                </svg>
+              </a>
+
+              {/* LinkedIn */}
+              <a
+                href={parsedSocials.linkedin || "https://www.linkedin.com/in/akash-malvi-50313b281"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-11 h-11 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-[#6366f1] dark:hover:text-[#818cf8] hover:border-[#6366f1] dark:hover:border-[#818cf8] hover:bg-indigo-50/20 transition-all cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                </svg>
+              </a>
+
+              {/* Mail */}
+              <a
+                href={`mailto:${profile?.email || "akashmalvi7666@gmail.com"}`}
+                className="w-11 h-11 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-[#6366f1] dark:hover:text-[#818cf8] hover:border-[#6366f1] dark:hover:border-[#818cf8] hover:bg-indigo-50/20 transition-all cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L22 8m-9 11h-3a2 2 0 01-2-2V7a2 2 0 012-2h3M9 19a2 2 0 002 2h3a2 2 0 002-2m-8-2h8" />
+                </svg>
+              </a>
+
+              {/* LeetCode */}
+              <a
+                href={parsedSocials.leetcode || "https://leetcode.com/u/akashmalvi7666/"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-11 h-11 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-[#6366f1] dark:hover:text-[#818cf8] hover:border-[#6366f1] dark:hover:border-[#818cf8] hover:bg-indigo-50/20 transition-all cursor-pointer"
+              >
+                {/* LeetCode icon */}
+                <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M13.483 0a1.374 1.374 0 0 0-.961.414l-9.77 9.77a1.375 1.375 0 0 0-.025 1.92l.025.025a1.375 1.375 0 0 0 1.917.025l9.77-9.77A1.375 1.375 0 0 0 13.483 0zm-5.69 7.03a1.375 1.375 0 0 0-.973.405L.409 13.85c-.545.543-.545 1.423 0 1.965l3.778 3.778c.542.545 1.422.545 1.965 0l6.413-6.413a1.378 1.378 0 0 0-.97-2.353H7.793zm10.748 1.258a1.375 1.375 0 0 0-.97.402l-6.417 6.417a1.375 1.375 0 0 0 0 1.944l3.777 3.777c.537.538 1.408.538 1.945 0l6.418-6.417c.537-.537.537-1.408 0-1.945l-3.777-3.777a1.375 1.375 0 0 0-.976-.401z"/>
+                </svg>
+              </a>
+            </div>
+
+            {/* Dynamic statistics underneath socials */}
+            <div className="flex items-center gap-10 border-t border-slate-100 dark:border-slate-850 pt-6 max-w-xl">
               <div>
-                <p className="text-3xl font-extrabold text-slate-950 dark:text-white">10+</p>
-                <p className="text-xs uppercase font-bold tracking-wider text-slate-400">Projects Built</p>
+                <p className="text-2xl font-black text-[#0f172a] dark:text-white">{experienceYears}+</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Years experience</p>
               </div>
-             
+              <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800" />
               <div>
-                <p className="text-3xl font-extrabold text-slate-950 dark:text-white">2.0ms</p>
-                <p className="text-xs uppercase font-bold tracking-wider text-slate-400">Cache Latency</p>
+                <p className="text-2xl font-black text-[#0f172a] dark:text-white">{projectsCount}</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Projects shipped</p>
+              </div>
+              <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800" />
+              <div>
+                <p className="text-2xl font-black text-[#0f172a] dark:text-white">2.4M</p>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Reqs served / mo</p>
               </div>
             </div>
 
           </div>
 
-          {/* Interactive Simulator (5 columns) */}
-          <div className="lg:col-span-5 relative">
-            <div className="absolute -inset-4 bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-[2.5rem] opacity-10 blur-2xl pointer-events-none" />
+          {/* Code Window Graphic (5 columns) */}
+          <div className="lg:col-span-5 relative w-full">
+            <div className="absolute -inset-4 bg-gradient-to-tr from-purple-500/10 to-indigo-500/10 rounded-[2.5rem] opacity-30 blur-2xl pointer-events-none" />
             
-            <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-6 rounded-[2.5rem] shadow-2xl overflow-hidden glow-purple">
+            <div className="relative bg-[#0d1117] border border-slate-800 p-6 rounded-2xl shadow-2xl overflow-hidden font-mono text-xs text-slate-300">
               
-              {/* Simulator Header */}
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-purple-500"></span>
-                  <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Latency Simulator</span>
+              {/* macOS Window Controls */}
+              <div className="flex justify-between items-center mb-6 pb-2 border-b border-[#21262d]">
+                <div className="flex gap-2">
+                  <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
+                  <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+                  <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
                 </div>
-                
-                {/* Simulator Mode Selector */}
-                <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50">
-                  <button
-                    onClick={() => setSimMode('hit')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                      simMode === 'hit'
-                        ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    Redis Hit
-                  </button>
-                  <button
-                    onClick={() => setSimMode('miss')}
-                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                      simMode === 'miss'
-                        ? 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    Redis Miss
-                  </button>
-                </div>
+                <div className="text-[10px] text-slate-400">developer.ts</div>
+                <div className="w-12" /> {/* Spacer */}
               </div>
 
-              {/* Architecture Node Visualization */}
-              <div className="relative py-8 flex flex-col items-center justify-between min-h-[300px]">
+              {/* Code Snippet */}
+              <div className="flex gap-4 leading-relaxed overflow-x-auto select-none">
                 
-                {/* Ping Dot Animations */}
-                <AnimatePresence>
-                  {simStep === 'client-to-api' && (
-                    <motion.div
-                      initial={{ y: -80, opacity: 1 }}
-                      animate={{ y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5, ease: 'easeInOut' }}
-                      className="absolute w-3.5 h-3.5 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7] z-20"
-                    />
-                  )}
-                  {simStep === 'api-to-redis' && (
-                    <motion.div
-                      initial={{ x: 0, y: 0, opacity: 1 }}
-                      animate={{ x: 80, y: 35 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.4, ease: 'easeInOut' }}
-                      className="absolute w-3.5 h-3.5 rounded-full bg-yellow-500 shadow-[0_0_10px_#eab308] z-20"
-                    />
-                  )}
-                  {simStep === 'redis-to-api' && (
-                    <motion.div
-                      initial={{ x: 80, y: 35, opacity: 1 }}
-                      animate={{ x: 0, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.4, ease: 'easeInOut' }}
-                      className="absolute w-3.5 h-3.5 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e] z-20"
-                    />
-                  )}
-                  {simStep === 'api-to-db' && (
-                    <motion.div
-                      initial={{ x: 0, y: 0, opacity: 1 }}
-                      animate={{ x: -80, y: 35 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.6, ease: 'easeInOut' }}
-                      className="absolute w-3.5 h-3.5 rounded-full bg-amber-500 shadow-[0_0_10px_#f59e0b] z-20"
-                    />
-                  )}
-                  {simStep === 'db-to-api' && (
-                    <motion.div
-                      initial={{ x: -80, y: 35, opacity: 1 }}
-                      animate={{ x: 0, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.6, ease: 'easeInOut' }}
-                      className="absolute w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981] z-20"
-                    />
-                  )}
-                  {simStep === 'api-to-client' && (
-                    <motion.div
-                      initial={{ y: 0, opacity: 1 }}
-                      animate={{ y: -80 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5, ease: 'easeInOut' }}
-                      className="absolute w-3.5 h-3.5 rounded-full bg-purple-500 shadow-[0_0_10px_#a855f7] z-20"
-                    />
-                  )}
-                </AnimatePresence>
-
-                {/* Node 1: Client */}
-                <div className="flex flex-col items-center z-10">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-xl shadow-inner">
-                    💻
-                  </div>
-                  <span className="text-[10px] font-mono font-bold text-slate-400 mt-1.5 uppercase">Client (React)</span>
+                {/* Line Numbers */}
+                <div className="text-slate-600 text-right pr-2 select-none border-r border-[#21262d]">
+                  <div>1</div>
+                  <div>2</div>
+                  <div>3</div>
+                  <div>4</div>
+                  <div>5</div>
+                  <div>6</div>
+                  <div>7</div>
+                  <div>8</div>
+                  <div>9</div>
+                  <div>10</div>
                 </div>
 
-                {/* Connecting Lines (svg path overlays) */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30 dark:opacity-20" fill="none" viewBox="0 0 300 300">
-                  {/* Vertical client-api line */}
-                  <line x1="150" y1="60" x2="150" y2="140" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
-                  {/* API -> DB (Left) */}
-                  <line x1="150" y1="140" x2="70" y2="210" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
-                  {/* API -> Redis (Right) */}
-                  <line x1="150" y1="140" x2="230" y2="210" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" />
-                </svg>
-
-                {/* Middle and Bottom Node Grid */}
-                <div className="w-full flex justify-between px-2 items-center mt-6">
-                  
-                  {/* Node 3: DB (PostgreSQL) - Bottom Left */}
-                  <div className="flex flex-col items-center z-10">
-                    <div className={`w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 ${
-                      simStep === 'api-to-db' || simStep === 'db-to-api'
-                        ? 'bg-amber-500/20 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
-                        : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
-                    }`}>
-                      🗄️
-                    </div>
-                    <span className="text-[10px] font-mono font-bold text-slate-400 mt-1.5 uppercase">PostgreSQL</span>
+                {/* Code highlight */}
+                <div className="text-left">
+                  <div>
+                    <span className="text-[#ff7b72]">const</span>{' '}
+                    <span className="text-[#79c0ff]">developer</span>{' '}
+                    <span className="text-[#ff7b72]">=</span>{' '}
+                    <span className="text-white">{'{'}</span>
                   </div>
-
-                  {/* Node 2: Server (Node.js API) - Middle Center */}
-                  <div className="flex flex-col items-center z-10">
-                    <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl transition-all duration-300 ${
-                      simStep !== 'idle' && simStep !== 'done'
-                        ? 'bg-purple-500/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-                        : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
-                    }`}>
-                      🟢
-                    </div>
-                    <span className="text-[10px] font-mono font-bold text-slate-400 mt-1.5 uppercase">Node.js API</span>
+                  <div>
+                    <span className="text-slate-400">  name:</span>{' '}
+                    <span className="text-[#a5d6ff]">"{profile?.name || "Akash Malvi"}"</span>,
                   </div>
-
-                  {/* Node 4: Redis (Cache) - Bottom Right */}
-                  <div className="flex flex-col items-center z-10">
-                    <div className={`w-12 h-12 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 ${
-                      simStep === 'api-to-redis' || simStep === 'redis-to-api'
-                        ? 'bg-yellow-500/20 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]'
-                        : 'bg-slate-100 dark:bg-slate-950 border-slate-200 dark:border-slate-800'
-                    }`}>
-                      ⚡
-                    </div>
-                    <span className="text-[10px] font-mono font-bold text-slate-400 mt-1.5 uppercase">Redis Cache</span>
+                  <div>
+                    <span className="text-slate-400">  role:</span>{' '}
+                    <span className="text-[#a5d6ff]">"Full-Stack Developer"</span>,
                   </div>
-
+                  <div>
+                    <span className="text-slate-400">  stack:</span>{' '}
+                    <span className="text-white">[</span>
+                    {skillsList.map((skill, i) => (
+                      <span key={i}>
+                        <span className="text-[#a5d6ff]">"{skill}"</span>
+                        {i < skillsList.length - 1 && <span className="text-white">, </span>}
+                      </span>
+                    ))}
+                    <span className="text-white">]</span>,
+                  </div>
+                  <div>
+                    <span className="text-slate-400">  focus:</span>{' '}
+                    <span className="text-[#a5d6ff]">"Scalable Systems & APIs"</span>,
+                  </div>
+                  <div>
+                    <span className="text-slate-400">  shipsProduction:</span>{' '}
+                    <span className="text-[#ff7b72]">true</span>
+                  </div>
+                  <div>
+                    <span className="text-white">{'};'}</span>
+                  </div>
+                  <div className="h-4" />
+                  <div>
+                    <span className="text-[#8b949e]">// currently building</span>
+                  </div>
+                  <div>
+                    <span className="text-[#d2a8ff]">deploy</span>
+                    <span className="text-white">(</span>
+                    <span className="text-[#79c0ff]">developer</span>
+                    <span className="text-white">.</span>
+                    <span className="text-[#79c0ff]">nextProject</span>
+                    <span className="text-white">)</span>
+                    <span className="text-[#ff7b72] animate-pulse">|</span>
+                  </div>
                 </div>
 
-              </div>
-
-              {/* Simulation Controller */}
-              <div className="mt-4 flex flex-col items-center justify-center gap-3">
-                <button
-                  onClick={triggerSimulation}
-                  disabled={simStep !== 'idle'}
-                  className={`w-full py-3 rounded-2xl font-extrabold text-xs uppercase tracking-wider transition-all duration-200 ${
-                    simStep !== 'idle'
-                      ? 'bg-slate-100 dark:bg-slate-950 text-slate-400 cursor-not-allowed border border-slate-200/50 dark:border-slate-800/50'
-                      : 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 hover:scale-[1.02] shadow-md hover:shadow-purple-500/10 active:scale-98'
-                  }`}
-                >
-                  {simStep === 'idle' ? '⚡ Simulate Request' : 'Simulating Cache Flow...'}
-                </button>
-
-                {/* Simulation Output Dashboard */}
-                <div className="w-full bg-slate-50 dark:bg-slate-950/80 border border-slate-100 dark:border-slate-850 p-4 rounded-2xl flex flex-col gap-2.5 min-h-[90px]">
-                  
-                  {/* Status Indicator */}
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-slate-500 dark:text-slate-400">Simulation Status:</span>
-                    <span className="font-mono font-bold">
-                      {simStep === 'idle' && <span className="text-slate-400">READY</span>}
-                      {simStep === 'client-to-api' && <span className="text-purple-500 animate-pulse">Request Sent</span>}
-                      {simStep === 'api-to-redis' && <span className="text-yellow-500">Checking Redis...</span>}
-                      {simStep === 'redis-to-api' && <span className="text-green-500 font-black">Redis HIT!</span>}
-                      {simStep === 'api-to-db' && <span className="text-amber-500 font-semibold">Redis MISS. Querying DB...</span>}
-                      {simStep === 'db-to-api' && <span className="text-emerald-500">DB Response Returned</span>}
-                      {simStep === 'api-to-client' && <span className="text-purple-400">Returning response</span>}
-                      {simStep === 'done' && <span className="text-green-500">COMPLETED</span>}
-                    </span>
-                  </div>
-
-                  {/* Latency Meter */}
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-slate-500 dark:text-slate-400">Response Latency:</span>
-                    <span className="font-mono font-extrabold text-sm">
-                      {latency !== null ? (
-                        <span className={simMode === 'hit' ? 'text-green-500' : 'text-amber-500'}>
-                          {latency} ms {simMode === 'hit' ? '(98% Faster)' : '(Uncached)'}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400">-- ms</span>
-                      )}
-                    </span>
-                  </div>
-
-                  {/* Visual Caching Benefit Info */}
-                  {latency !== null && (
-                    <div className="text-[10px] text-center font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 py-1 rounded-lg border border-purple-100/50 dark:border-purple-900/40">
-                      {simMode === 'hit' 
-                        ? '💡 Redis bypassed PostgreSQL to return results instantly.' 
-                        : '💡 Bypassing cache forces database disk I/O (Slower latency).'}
-                    </div>
-                  )}
-
-                </div>
               </div>
 
             </div>
