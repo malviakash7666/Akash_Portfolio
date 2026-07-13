@@ -70,8 +70,9 @@ router.post("/", authMiddleware, (req, res, next) => {
 
     try {
       // Upload local file to Cloudinary
+      const isPdf = path.extname(req.file.originalname).toLowerCase() === ".pdf";
       const result = await cloudinary.uploader.upload(req.file.path, {
-        resource_type: "auto",
+        resource_type: isPdf ? "raw" : "auto",
         folder: "portfolio",
       });
 
