@@ -29,6 +29,7 @@ export const userService = {
     profileImage?: string;
     resumeUrl?: string;
     socialLinks?: Record<string, string>;
+    adminTwoFactorEnabled?: boolean;
   }) => {
     const response = await API.put("/users/profile", profileData);
     return response.data;
