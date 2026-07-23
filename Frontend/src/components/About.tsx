@@ -1,29 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { userService } from '../services/user.service';
+import { usePortfolioQuery } from '../hooks/usePortfolio';
 
 const About: React.FC = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [experiences, setExperiences] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchAboutData = async () => {
-      try {
-        const [profileRes, experiencesRes] = await Promise.all([
-          userService.getPublicProfile(),
-          userService.getExperiences()
-        ]);
-        if (profileRes && profileRes.success) {
-          setProfile(profileRes.profile);
-        }
-        if (experiencesRes && experiencesRes.success) {
-          setExperiences(experiencesRes.experiences || []);
-        }
-      } catch (err) {
-        console.error("Error loading profile in About:", err);
-      }
-    };
-    fetchAboutData();
-  }, []);
+  const { data } = usePortfolioQuery();
+  const profile = data?.profile;
+  const experiences = data?.experience || data?.experiences || [];
 
   // Compute location dynamically (parse from profile or default)
   const locationText = "Nagpur, Maharashtra";

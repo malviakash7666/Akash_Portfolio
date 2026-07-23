@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { userService } from '../services/user.service';
+import { usePortfolioQuery } from '../hooks/usePortfolio';
 
 interface NavLink {
   name: string;
@@ -21,22 +21,8 @@ const Navbar: React.FC = () => {
   const [isDark, setIsDark] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<string>(window.location.pathname);
-  const [profile, setProfile] = useState<any>(null);
-
-  // Load profile resume link on mount
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const res = await userService.getPublicProfile();
-        if (res.success) {
-          setProfile(res.profile);
-        }
-      } catch (err) {
-        console.error("Error loading profile in navbar:", err);
-      }
-    };
-    loadProfile();
-  }, []);
+  const { data } = usePortfolioQuery();
+  const profile = data?.profile;
 
   // Handle Dark Mode Toggle
   useEffect(() => {

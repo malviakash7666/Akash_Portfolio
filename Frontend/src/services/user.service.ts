@@ -1,5 +1,15 @@
 import API from "../utils/api";
 
+let publicProfilePromise: Promise<any> | null = null;
+let skillsPromise: Promise<any> | null = null;
+let experiencesPromise: Promise<any> | null = null;
+
+const clearCache = () => {
+  publicProfilePromise = null;
+  skillsPromise = null;
+  experiencesPromise = null;
+};
+
 export const userService = {
   // Authentication & Profile
   login: async (email: string, password: string) => {
@@ -18,7 +28,24 @@ export const userService = {
   },
 
   getPublicProfile: async () => {
-    const response = await API.get("/users/profile");
+    if (!publicProfilePromise) {
+      publicProfilePromise = API.get("/users/profile")
+        .then((res) => res.data)
+        .catch((err) => {
+          publicProfilePromise = null;
+          throw err;
+        });
+    }
+    return publicProfilePromise;
+  },
+
+  getHealth: async () => {
+    const response = await API.get("/health");
+    return response.data;
+  },
+
+  getPortfolio: async () => {
+    const response = await API.get("/portfolio");
     return response.data;
   },
 
@@ -31,32 +58,44 @@ export const userService = {
     socialLinks?: Record<string, string>;
     adminTwoFactorEnabled?: boolean;
   }) => {
+    clearCache();
     const response = await API.put("/users/profile", profileData);
     return response.data;
   },
 
   // Skills
   getSkills: async () => {
-    const response = await API.get("/skills");
-    return response.data;
+    if (!skillsPromise) {
+      skillsPromise = API.get("/skills")
+        .then((res) => res.data)
+        .catch((err) => {
+          skillsPromise = null;
+          throw err;
+        });
+    }
+    return skillsPromise;
   },
 
   createSkill: async (skillData: { name: string; level: string; category: string }) => {
+    clearCache();
     const response = await API.post("/skills", skillData);
     return response.data;
   },
 
   updateSkill: async (id: number, skillData: { name?: string; level?: string; category?: string }) => {
+    clearCache();
     const response = await API.put(`/skills/${id}`, skillData);
     return response.data;
   },
 
   deleteSkill: async (id: number) => {
+    clearCache();
     const response = await API.delete(`/skills/${id}`);
     return response.data;
   },
 
   updateSkillsOrder: async (orderList: Array<{ id: number; category: string; level: string; name: string }>) => {
+    clearCache();
     const response = await API.put("/skills/order", { orderList });
     return response.data;
   },
@@ -90,6 +129,7 @@ export const userService = {
     learnings?: string;
     showOnHome?: boolean;
   }) => {
+    clearCache();
     const response = await API.post("/projects", projectData);
     return response.data;
   },
@@ -115,19 +155,28 @@ export const userService = {
       showOnHome?: boolean;
     }
   ) => {
+    clearCache();
     const response = await API.put(`/projects/${id}`, projectData);
     return response.data;
   },
 
   deleteProject: async (id: number) => {
+    clearCache();
     const response = await API.delete(`/projects/${id}`);
     return response.data;
   },
 
   // Experiences
   getExperiences: async () => {
-    const response = await API.get("/experiences");
-    return response.data;
+    if (!experiencesPromise) {
+      experiencesPromise = API.get("/experiences")
+        .then((res) => res.data)
+        .catch((err) => {
+          experiencesPromise = null;
+          throw err;
+        });
+    }
+    return experiencesPromise;
   },
 
   createExperience: async (expData: {
@@ -138,6 +187,7 @@ export const userService = {
     description: string[];
     current?: boolean;
   }) => {
+    clearCache();
     const response = await API.post("/experiences", expData);
     return response.data;
   },
@@ -153,11 +203,13 @@ export const userService = {
       current?: boolean;
     }
   ) => {
+    clearCache();
     const response = await API.put(`/experiences/${id}`, expData);
     return response.data;
   },
 
   deleteExperience: async (id: number) => {
+    clearCache();
     const response = await API.delete(`/experiences/${id}`);
     return response.data;
   },
@@ -175,6 +227,7 @@ export const userService = {
     link?: string;
     image?: string;
   }) => {
+    clearCache();
     const response = await API.post("/certificates", certData);
     return response.data;
   },
@@ -189,11 +242,13 @@ export const userService = {
       image?: string;
     }
   ) => {
+    clearCache();
     const response = await API.put(`/certificates/${id}`, certData);
     return response.data;
   },
 
   deleteCertificate: async (id: number) => {
+    clearCache();
     const response = await API.delete(`/certificates/${id}`);
     return response.data;
   },

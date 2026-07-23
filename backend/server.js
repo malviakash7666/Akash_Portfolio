@@ -61,6 +61,38 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+  });
+});
+
+app.get("/api/portfolio", async (req, res, next) => {
+  try {
+    const [admin, skills, projects, experiences] = await Promise.all([
+      db.User.findOne({
+        where: { role: "admin" },
+        attributes: ["name", "bio", "heroDescription", "profileImage", "resumeUrl", "socialLinks"],
+      }),
+      db.Skill.findAll({ order: [["id", "ASC"]] }),
+      db.Project.findAll({ order: [["id", "DESC"]] }),
+      db.Experience.findAll({ order: [["id", "DESC"]] }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      profile: admin || null,
+      skills: skills || [],
+      projects: projects || [],
+      experience: experiences || [],
+      experiences: experiences || [],
+      education: [],
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // =======================
 // Routes
 // =======================

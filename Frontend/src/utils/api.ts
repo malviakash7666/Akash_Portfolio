@@ -1,7 +1,19 @@
 import axios from "axios";
 
+let baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+// Auto-correct local development URLs to avoid SSL protocol errors
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+  if (baseUrl.startsWith("https://")) {
+    baseUrl = baseUrl.replace(/^https:\/\//i, "http://");
+  }
+  if (!baseUrl.endsWith("/api")) {
+    baseUrl = baseUrl.replace(/\/+$/, "") + "/api";
+  }
+}
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: baseUrl,
   withCredentials: true, // 🔥 IMPORTANT
 });
 
